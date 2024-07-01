@@ -1,4 +1,4 @@
-Certainly! Let's break down how a reverse shell using PowerShell works, step by step. A reverse shell is a type of shell where the target machine (the victim) initiates a connection to an attacking machine (the attacker) and provides shell access.
+#Plan
 
 ### Components of a Reverse Shell
 
