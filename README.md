@@ -1,8 +1,7 @@
 # Plan
 
-Create a reverse-shell then inject keylogging code into device.
-
-Send Reverse-Shell through Pinapple hosting a fake splash Page.
+Keylogging lab through using a Wifi Pinapple
+- use it to inject the Reverse Shell Script
 
 ### Components of a Reverse Shell
 
