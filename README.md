@@ -1,5 +1,9 @@
 # Plan
 
+Create a reverse-shell then inject keylogging code into device.
+
+Send Reverse-Shell through Pinapple hosting a fake splash Page.
+
 ### Components of a Reverse Shell
 
 1. **Listener**: The attacking machine runs a service that listens for incoming connections.
